@@ -13,7 +13,9 @@ let CHOICE_CONTEXT = 'choice';
 let QUIT_ASSISTANT_ACTION = 'quit';
 let PROVIDE_INFO_ACTION = 'provide_info';
 // let DEFAULT_FALLBACK_ACTION = 'input.unknown';
-let DATE_TIME_ARGUMENT = 'date-time';
+// let DATE_TIME_ARGUMENT = 'date-time';
+let DATE_ARGUMENT = 'date';
+let TIME_ARGUMENT = 'time';
 
 const OFFER_MESSAGE = "Hi. What can I help you with?";
 const REPORT_MESSAGE = "You have ";
@@ -27,12 +29,14 @@ exports.studentAssistant = functions.https.onRequest((request, response) => {
 
   function provideInfo(app) {
     console.log('provideInfo');
-    let datetime = new Date(app.getArgument(DATE_TIME_ARGUMENT));
-    app.setContext(CHOICE_CONTEXT);
+    let today = new Date();
+    let date = (!(app.getArgument(DATE_ARGUMENT))) ? today.toISOString().split('T')[0] : app.getArgument(DATE_ARGUMENT);
+    let datetime = new Date((date + 'T' + app.getArgument(TIME_ARGUMENT) + 'Z'));
     let loc = "timetables/" + datetime.getDay() + '/' + datetime.getHours();
     var ref = db.ref(loc);
+    app.setContext(CHOICE_CONTEXT);
     ref.once("value",function(data) {
-      app.tell(REPORT_MESSAGE + data.val());
+      app.tell(REPORT_MESSAGE + data.val() + ' at ' + datetime.getHours() + ' << ' + datetime);
     });
   }
 
