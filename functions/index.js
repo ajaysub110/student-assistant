@@ -36,7 +36,7 @@ exports.studentAssistant = functions.https.onRequest((request, response) => {
     var ref = db.ref(loc);
     app.setContext(CHOICE_CONTEXT);
     ref.once("value",function(data) {
-      app.tell(REPORT_MESSAGE + data.val() + ' at ' + datetime.getHours() + ' << ' + datetime);
+      app.tell(REPORT_MESSAGE + data.val() + ' at ' + datetime.getHours());
     });
   }
 
