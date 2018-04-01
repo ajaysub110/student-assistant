@@ -3,17 +3,22 @@
 process.env.DEBUG = 'actions-on-google:*';
 const App = require('actions-on-google').DialogflowApp;
 const functions = require('firebase-functions');
-const admin = require('firebase-admin');
-admin.initializeApp(functions.config().firebase);
-const db = admin.database();
-const rootref = db.ref("/");
+
+let db = { "29" :
+  [
+    [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"Sample Class 1", "Sample Class 2"],
+    [ null, null, null, null, null, null, null, null, null, "Workshop", "Workshop", "ES", null, null, null, "CP" ],
+    [ null, null, null, null, null, null, null, null, "Maths", null, "MOW", "Maths", "Thermo", null, null, "TRW" ],
+    [ null, null, null, null, null, null, null, null, "ES", "Workshop", "Workshop", "ES", null, null, null, "CP", "CP Lab", "CP Lab" ],
+    [ null, null, null, null, null, null, null, null, "Thermo", null, "MOW", "Maths", "Thermo", null, null, "TRW" ],
+    [ null, null, null, null, null, null, null, null, "MOW", "Bio Lab", null, "ES", null, null, null, "CP" ],
+    [ null, null, null, null, null, null, null, null, null, null, "MOW", "Maths", "Thermo"]
+  ]
+};
 
 let CHOICE_CONTEXT = 'choice';
-// let STUDENT_ASSISTANT_ACTION = 'give_choice';
 let QUIT_ASSISTANT_ACTION = 'quit';
 let PROVIDE_INFO_ACTION = 'provide_info';
-// let DEFAULT_FALLBACK_ACTION = 'input.unknown';
-// let DATE_TIME_ARGUMENT = 'date-time';
 let DATE_ARGUMENT = 'date';
 let TIME_ARGUMENT = 'time';
 
@@ -29,15 +34,29 @@ exports.studentAssistant = functions.https.onRequest((request, response) => {
 
   function provideInfo(app) {
     console.log('provideInfo');
+    app.setContext(CHOICE_CONTEXT);
+
     let today = new Date();
     let date = (!(app.getArgument(DATE_ARGUMENT))) ? today.toISOString().split('T')[0] : app.getArgument(DATE_ARGUMENT);
-    let datetime = new Date((date + 'T' + app.getArgument(TIME_ARGUMENT) + 'Z'));
-    let loc = "timetables/" + datetime.getDay() + '/' + datetime.getHours();
-    var ref = db.ref(loc);
-    app.setContext(CHOICE_CONTEXT);
-    ref.once("value",function(data) {
-      app.tell(REPORT_MESSAGE + data.val() + ' at ' + datetime.getHours());
-    });
+    let time = (!(app.getArgument(TIME_ARGUMENT))) ? today.toISOString().split('T')[1].slice(0,-1) : app.getArgument(TIME_ARGUMENT);
+    let datetime = new Date((date + 'T' + time + 'Z'));
+    let day = parseInt(datetime.getDay(),10);
+    let flag=0;
+
+    for(let i=parseInt(datetime.getHours(),10);i<db["29"][day].length;i+=1) {
+      let result = db["29"][day][i];
+      if(!result) {
+        flag=1;
+        continue;
+      }
+      else {
+        if (flag==0)
+          app.tell(REPORT_MESSAGE + result + ' at ' + i + ":00");
+        else
+          app.tell("You don't have any class at " + datetime.getHours() + ':00. You\'re next one is ' + result + ' at ' + i + ':00.');
+        break;
+      }
+    }
   }
 
   function quitSession(app){
